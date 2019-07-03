@@ -1,0 +1,71 @@
+This add-on allows to include additional special fields to a card template like <code>{{info::Ivl}}</code> or <code>{{info::Options_Group_Name}}</code>
+
+This is a fork for 2.1 of the add-on <a href="https://ankiweb.net/shared/info/441235634" rel="nofollow">Additional Card Fields</a> by reddit user /u/Dayjaby. I just reorganized the code and added some options.
+
+<b>Details</b>
+You can include information about the current card:
+
+- {{info::FirstReview}} - the first day that this card got reviewed
+- {{info::LastReview}} - the last reviewed day
+- {{info::TimeAvg}} - average time spent on this card
+- {{info::TimeTotal}} - total time spent
+- {{info::overdue_fmt}} - overdue days formatted
+- {{info::overdue_days}} - overdue days
+- {{info::Ord}} - the number of the template. The first template gets the number 0, the second the number 1, etc. Useful e.g. for clozed cards, where you want Javascript code to behave different for certain cards
+- {{info::Did}} - deck id
+- {{info::Due}} - due date
+- {{info::Id}} - card id
+- {{info::Ivl}} - current interval
+- {{info::Queue}} - 0=new, 1=learning, 2=due, -1=suspended, -2=user buried, -3=sched buried
+- {{info::Reviews}} - number of reviews that you had on a card
+- {{info::Lapses}} - number of lapses
+- {{info::Type}} - 0=suspended,1=learning,2=normal,3=day learning
+- {{info::Nid}} - note id
+- {{info::Mod}} - last modification date
+- {{info::Usn}} - universal serial number which is incremented everytime you upload to AnkiWeb
+- {{info::Factor}} - the easiness of a card, e.g. 2000 would be 200%
+- {{info::Review?}} - is this card being reviewed?
+- {{info::New?}} - is this card new?
+- {{info::Learning?}} - is this card being learned?
+- {{info::TodayLearning?}} - shown if card in learning and in queue 1
+- {{info::DayLearning?}} - shown if card in learning and in queue 3
+- {{info::Young}} - shown if card in "review" and interval shorter than 21 days
+- {{info::Mature}} - shown if card in "review" and interval longer than 21 days
+- {{info::Date_Created}} - Date of card creation = noteID formatted
+
+
+<b>If you enable it in the settings of this add-on</b> you can also show some deck options. I don't use this. To view deck options I prefer the add-ons <a href="https://ankiweb.net/shared/info/673114053" rel="nofollow">deck and card info sidebar during review</a> or <a href="https://ankiweb.net/shared/info/1008566916" rel="nofollow">Extended Card Stats During Review</a> because these work for all note types.
+
+- {{info::Options_Group_ID}}
+- {{info::Options_Group_Name}}
+- {{info::Ignore_answer_times_longer_than}}
+- {{info::Show_answer_time}}
+- {{info::Auto_play_audio}}
+- {{info::When_answer_shown_replay_q}}
+- {{info::is_filtered_deck}}
+- {{info::deck_usn}}
+- {{info::deck_mod_time}}
+- {{info::new__steps_in_minutes}}
+- {{info::new__order_of_new_cards}}
+- {{info::new__cards_per_day}}
+- {{info::graduating_interval}}
+- {{info::easy_interval}}
+- {{info::Starting_ease}}
+- {{info::bury_related_new_cards}}
+- {{info::MaxiumReviewsPerDay}}
+- {{info::EasyBonus}}
+- {{info::IntervalModifier}}
+- {{info::MaximumInterval}}
+- {{info::bur_related_reviews_until_next_day}}
+- {{info::lapse_learning_steps}}
+- {{info::lapse_new_ivl}}
+- {{info::lapse_min_ivl}}
+- {{info::lapse_leech_threshold}}
+- {{info::lapse_leech_action}}
+
+In this repo there's also a file with even more fields. If you really need these you need to edit the source code of this add-on and add them. But this might cause errors. So they are not included by default.
+
+<b>bugs, etc.</b>
+Feedback, improvements, and error reports are welcome. It's best to post these in <a href="https://github.com/ijgnd/anki21__additional_card_fields_during_review" rel="nofollow">my github repo</a> where I can respond multiple times. 
+
+
