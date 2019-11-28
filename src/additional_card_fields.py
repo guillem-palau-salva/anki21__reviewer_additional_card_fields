@@ -30,18 +30,23 @@ https://ankiweb.net/shared/info/441235634
   https://github.com/ankitest/anki-musthave-addons-by-ankitest 
 """
 
-import copy
-import time
 import collections
+import copy
+import re
+import time
 
-from aqt import mw
+from anki import version as ankiversion
 from anki.collection import _Collection
-from anki.utils import fmtTimeSpan, isWin, stripHTML
-from aqt.utils import tooltip
+from anki.hooks import wrap
+from anki.utils import (
+    fmtTimeSpan,
+    isWin, 
+    stripHTML
+)
 from anki.stats import CardStats
 from anki.template.template import *
-from anki.hooks import wrap
-from anki import version as ankiversion
+from aqt import mw
+from aqt.utils import tooltip
 
 
 def gc(arg, fail=False):
@@ -75,7 +80,6 @@ def valueForOverdue(odid, queue, type, due, d):
 
 
 def external_file_link(card, model):
-    print('external_file_link')
     field_for_filename = ""
     field_for_page = ""
     # import user settings for field names from other add-on
