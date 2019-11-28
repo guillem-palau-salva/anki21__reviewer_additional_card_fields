@@ -180,6 +180,7 @@ def _renderQA(self, data, qfmt=None, afmt=None, _old=None):
         addInfo['Mod'] = time.strftime("%Y-%m-%d", time.localtime(card.mod))
         addInfo['Usn'] = card.usn
         addInfo['Factor'] = card.factor
+        addInfo['Ease'] = int(card.factor/10)
 
         addInfo['Review?'] = 'Review' if card.type == 2 else ''
         addInfo['New?'] = 'New' if card.type == 0 else ''
