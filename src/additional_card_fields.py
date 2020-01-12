@@ -120,6 +120,7 @@ def _renderQA(self, data, qfmt=None, afmt=None, _old=None):
         # data is [cid, nid, mid, did, ord, tags, flds]
         # unpack fields and create dict
     """
+    data = list(data)
     origFieldMap = self.models.fieldMap
     model = self.models.get(data[2])
     if data[0] is None:
@@ -253,6 +254,7 @@ def _renderQA(self, data, qfmt=None, afmt=None, _old=None):
 
     self.models.fieldMap = tmpFieldMap
 
+    data = tuple(data)
     result = _old(self, data, qfmt, afmt)
     data = origdata
     self.models.fieldMap = origFieldMap
