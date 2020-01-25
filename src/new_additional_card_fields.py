@@ -142,102 +142,99 @@ def get_all_fields(context: TemplateRenderContext) -> Dict[str, Any]:
     addInfo: Dict[str, Any] = {}
     card = context.card()
 
-    if card is not None:
-        r = mw.reviewer
-        d = mw.col
-        cs = CardStats(d, r.card)
+    d = mw.col
 
-        if card.odid:
-            conf = d.decks.confForDid(card.odid)
-        else:
-            conf = d.decks.confForDid(card.did)
+    if card.odid:
+        conf = d.decks.confForDid(card.odid)
+    else:
+        conf = d.decks.confForDid(card.did)
 
-        (first, last, cnt, total) = mw.col.db.first(
-            "select min(id), max(id), count(), sum(time)/1000 from revlog where cid = :id",
-            id=card.id,
+    (first, last, cnt, total) = mw.col.db.first(
+        "select min(id), max(id), count(), sum(time)/1000 from revlog where cid = :id",
+        id=card.id,
+    )
+
+    if cnt:
+        addInfo["FirstReview"] = time.strftime(
+            "%a, %d %b %Y %H:%M:%S", time.localtime(first / 1000)
+        )
+        addInfo["LastReview"] = time.strftime(
+            "%a, %d %b %Y %H:%M:%S", time.localtime(last / 1000)
         )
 
-        if cnt:
-            addInfo["FirstReview"] = time.strftime(
-                "%a, %d %b %Y %H:%M:%S", time.localtime(first / 1000)
+        # https://docs.python.org/2/library/datetime.html  #todo
+        addInfo["TimeAvg"] = timefn(total / float(cnt))
+        addInfo["TimeTotal"] = timefn(total)
+
+        cOverdueIvl = valueForOverdue(card.odid, card.queue, card.type, card.due, d)
+        if cOverdueIvl:
+            addInfo["overdue_fmt"] = (
+                str(cOverdueIvl) + " day" + ("s" if cOverdueIvl > 1 else "")
             )
-            addInfo["LastReview"] = time.strftime(
-                "%a, %d %b %Y %H:%M:%S", time.localtime(last / 1000)
-            )
+            addInfo["overdue_days"] = str(cOverdueIvl)
 
-            # https://docs.python.org/2/library/datetime.html  #todo
-            addInfo["TimeAvg"] = timefn(total / float(cnt))
-            addInfo["TimeTotal"] = timefn(total)
+    addInfo["external_file_link"] = external_file_link(card, context.note_type())
 
-            cOverdueIvl = valueForOverdue(card.odid, card.queue, card.type, card.due, d)
-            if cOverdueIvl:
-                addInfo["overdue_fmt"] = (
-                    str(cOverdueIvl) + " day" + ("s" if cOverdueIvl > 1 else "")
-                )
-                addInfo["overdue_days"] = str(cOverdueIvl)
+    addInfo["Ord"] = card.ord
+    addInfo["Did"] = card.did
+    addInfo["Due"] = card.due
+    addInfo["Id"] = card.id
+    addInfo["Ivl"] = card.ivl
+    addInfo["Queue"] = card.queue
+    addInfo["Reviews"] = card.reps
+    addInfo["Lapses"] = card.lapses
+    addInfo["Type"] = card.type
+    addInfo["Nid"] = card.nid
+    addInfo["Mod"] = time.strftime("%Y-%m-%d", time.localtime(card.mod))
+    addInfo["Usn"] = card.usn
+    addInfo["Factor"] = card.factor
+    addInfo["Ease"] = int(card.factor / 10)
 
-        addInfo["external_file_link"] = external_file_link(card, context.note_type())
+    addInfo["Review?"] = "Review" if card.type == 2 else ""
+    addInfo["New?"] = "New" if card.type == 0 else ""
+    addInfo["Learning?"] = "Learning" if card.type == 1 else ""
+    addInfo["TodayLearning?"] = (
+        "Learning" if card.type == 1 and card.queue == 1 else ""
+    )
+    addInfo["DayLearning?"] = (
+        "Learning" if card.type == 1 and card.queue == 3 else ""
+    )
 
-        addInfo["Ord"] = context.card_ord()
-        addInfo["Did"] = card.did
-        addInfo["Due"] = card.due
-        addInfo["Id"] = card.id
-        addInfo["Ivl"] = card.ivl
-        addInfo["Queue"] = card.queue
-        addInfo["Reviews"] = card.reps
-        addInfo["Lapses"] = card.lapses
-        addInfo["Type"] = card.type
-        addInfo["Nid"] = card.nid
-        addInfo["Mod"] = time.strftime("%Y-%m-%d", time.localtime(card.mod))
-        addInfo["Usn"] = card.usn
-        addInfo["Factor"] = card.factor
-        addInfo["Ease"] = int(card.factor / 10)
+    addInfo["Young"] = "Young" if card.type == 2 and card.ivl < 21 else ""
+    addInfo["Mature"] = "Mature" if card.type == 2 and card.ivl > 20 else ""
 
-        addInfo["Review?"] = "Review" if card.type == 2 else ""
-        addInfo["New?"] = "New" if card.type == 0 else ""
-        addInfo["Learning?"] = "Learning" if card.type == 1 else ""
-        addInfo["TodayLearning?"] = (
-            "Learning" if card.type == 1 and card.queue == 1 else ""
+    if gc("make_deck_options_available", False):
+        addInfo["Options_Group_ID"] = conf["id"]
+        addInfo["Options_Group_Name"] = conf["name"]
+        addInfo["Ignore_answer_times_longer_than"] = conf["maxTaken"]
+        addInfo["Show_answer_time"] = conf["timer"]
+        addInfo["Auto_play_audio"] = conf["autoplay"]
+        addInfo["When_answer_shown_replay_q"] = conf["replayq"]
+        addInfo["is_filtered_deck"] = conf["dyn"]
+        addInfo["deck_usn"] = conf["usn"]
+        addInfo["deck_mod_time"] = conf["mod"]
+        addInfo["new__steps_in_minutes"] = conf["new"]["delays"]
+        addInfo["new__order_of_new_cards"] = conf["new"]["order"]
+        addInfo["new__cards_per_day"] = conf["new"]["perDay"]
+        addInfo["graduating_interval"] = conf["new"]["ints"][0]
+        addInfo["easy_interval"] = conf["new"]["ints"][1]
+        addInfo["Starting_ease"] = int(conf["new"]["initialFactor"] / 10)
+        addInfo["bury_related_new_cards"] = conf["new"]["bury"]
+        addInfo["MaxiumReviewsPerDay"] = conf["rev"]["perDay"]
+        addInfo["EasyBonus"] = int(100 * conf["rev"]["ease4"])
+        addInfo["IntervalModifier"] = int(100 * conf["rev"]["ivlFct"])
+        addInfo["MaximumInterval"] = conf["rev"]["maxIvl"]
+        addInfo["bur_related_reviews_until_next_day"] = conf["rev"]["bury"]
+        addInfo["lapse_learning_steps"] = conf["lapse"]["delays"]
+        addInfo["lapse_new_ivl"] = int(100 * conf["lapse"]["mult"])
+        addInfo["lapse_min_ivl"] = conf["lapse"]["minInt"]
+        addInfo["lapse_leech_threshold"] = conf["lapse"]["leechFails"]
+        addInfo["lapse_leech_action"] = conf["lapse"]["leechAction"]
+        addInfo["Date_Created"] = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(card.nid / 1000)
         )
-        addInfo["DayLearning?"] = (
-            "Learning" if card.type == 1 and card.queue == 3 else ""
-        )
 
-        addInfo["Young"] = "Young" if card.type == 2 and card.ivl < 21 else ""
-        addInfo["Mature"] = "Mature" if card.type == 2 and card.ivl > 20 else ""
-
-        if gc("make_deck_options_available", False):
-            addInfo["Options_Group_ID"] = conf["id"]
-            addInfo["Options_Group_Name"] = conf["name"]
-            addInfo["Ignore_answer_times_longer_than"] = conf["maxTaken"]
-            addInfo["Show_answer_time"] = conf["timer"]
-            addInfo["Auto_play_audio"] = conf["autoplay"]
-            addInfo["When_answer_shown_replay_q"] = conf["replayq"]
-            addInfo["is_filtered_deck"] = conf["dyn"]
-            addInfo["deck_usn"] = conf["usn"]
-            addInfo["deck_mod_time"] = conf["mod"]
-            addInfo["new__steps_in_minutes"] = conf["new"]["delays"]
-            addInfo["new__order_of_new_cards"] = conf["new"]["order"]
-            addInfo["new__cards_per_day"] = conf["new"]["perDay"]
-            addInfo["graduating_interval"] = conf["new"]["ints"][0]
-            addInfo["easy_interval"] = conf["new"]["ints"][1]
-            addInfo["Starting_ease"] = int(conf["new"]["initialFactor"] / 10)
-            addInfo["bury_related_new_cards"] = conf["new"]["bury"]
-            addInfo["MaxiumReviewsPerDay"] = conf["rev"]["perDay"]
-            addInfo["EasyBonus"] = int(100 * conf["rev"]["ease4"])
-            addInfo["IntervalModifier"] = int(100 * conf["rev"]["ivlFct"])
-            addInfo["MaximumInterval"] = conf["rev"]["maxIvl"]
-            addInfo["bur_related_reviews_until_next_day"] = conf["rev"]["bury"]
-            addInfo["lapse_learning_steps"] = conf["lapse"]["delays"]
-            addInfo["lapse_new_ivl"] = int(100 * conf["lapse"]["mult"])
-            addInfo["lapse_min_ivl"] = conf["lapse"]["minInt"]
-            addInfo["lapse_leech_threshold"] = conf["lapse"]["leechFails"]
-            addInfo["lapse_leech_action"] = conf["lapse"]["leechAction"]
-            addInfo["Date_Created"] = time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(card.nid / 1000)
-            )
-
-        # add your additional fields here
+    # add your additional fields here
 
     # for debugging quickly
     tt = " <table>" + "\n"

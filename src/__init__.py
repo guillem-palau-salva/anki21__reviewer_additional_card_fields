@@ -6,6 +6,20 @@ from anki.hooks import addHook
 from aqt import mw
 from aqt.utils import askUser
 
+
+def gc(arg, fail=False):
+    conf = mw.addonManager.getConfig(__name__)
+    if conf:
+        return conf.get(arg, fail)
+    return fail
+
+
+def wc(arg, val):
+    config = mw.addonManager.getConfig(__name__)
+    config[arg] = val
+    mw.addonManager.writeConfig(__name__, config)
+
+
 newold = {
     "{{info::FirstReview}}": "{{info-FirstReview:}}",
     "{{info::LastReview}}": "{{info-LastReview:}}",
@@ -66,22 +80,17 @@ newold = {
 }
 
 
-def update_for_these_templates_needed(ct):
-    for old in newold.keys():
-        if old in ct['qfmt'] or old in ct['afmt']:
-            return True
-
-
 def at_least_one_model_needs_to_be_updated():
     mids = mw.col.models.models.keys()
     for mid in mids:
         model = mw.col.models.get(mid)
-        for cardtype in model['tmpls']:
-            if update_for_these_templates_needed(cardtype):
+        for ct in model['tmpls']:
+            if "{{info::" in ct['qfmt'] or "{{info::" in ct['afmt']:
                 return True
 
 
 def fix_models():
+    mw.progress.start(immediate=True)
     for mid in mw.col.models.ids():
         model = mw.col.models.get(mid)
         for ct in model['tmpls']:
@@ -90,22 +99,25 @@ def fix_models():
                 ct['afmt'] = ct['afmt'].replace(old, new)
             mw.col.models.save(model)
     mw.col.models.flush()
-
-
-addon_path = os.path.dirname(__file__)
-user_files = os.path.join(addon_path, "user_files")
-ran_2120_update = os.path.join(user_files, "ran_2120_template_update")
+    mw.progress.finish()
 
 
 def update2120():
     if at_least_one_model_needs_to_be_updated():
         m = ("You use the add-on 'Additional Card Fields' and use syntax in your card templates "
-             "that no longer works in Anki 2.1.20. For details see the description "
-             "on https://ankiweb.net/shared/info/744725736. Adjust all your templates?")
+             "like '{{info::Due}}', '{{info::Factor}}', etc. that no longer works in Anki 2.1.20. "
+             "Because of technical changes in Anki 2.1.20 you need to modify the templates "
+             "and use '{{info-Due:}}', '{{info-Factor:}}', etc. "
+             "If you don't update your templates you will get an error message instead of seeing "
+             "your card contents when you review a card that has the old syntax in its template.\n\n"
+             "For details see the description on https://ankiweb.net/shared/info/744725736.\n\n"
+             "This add-on can also automatically update all your templates now. Proceed?\n\n"
+             "If you cancel now and want to update your templates later you'll have to adjust "
+             "the config of this add-on and enable the setting 'show 2.1.20 update message "
+             "on next start' and restart Anki.")
         if askUser(m):
             fix_models()
-    pathlib.Path(user_files).mkdir(parents=True, exist_ok=True) 
-    pathlib.Path(ran_2120_update).touch()
+    wc("show 2.1.20 update message on next start", False)
 
 
 old_anki = tuple(int(i) for i in anki_version.split(".")) < (2, 1, 20)
@@ -113,6 +125,6 @@ old_anki = tuple(int(i) for i in anki_version.split(".")) < (2, 1, 20)
 if old_anki:
     from . import old_additional_card_fields
 else:
-    if not os.path.isfile(ran_2120_update):
+    if gc("show 2.1.20 update message on next start", True):
         addHook("profileLoaded", update2120)
     from . import new_additional_card_fields
